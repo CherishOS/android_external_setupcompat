@@ -202,6 +202,13 @@ public class FooterBarMixin implements Mixin {
           if (button != null) {
             if (PartnerConfigHelper.isGlifExpressiveEnabled(context)) {
               setButtonWidthForExpressiveStyle();
+            } else {
+              LinearLayout.LayoutParams layoutParams =
+                  (LinearLayout.LayoutParams) button.getLayoutParams();
+              if (layoutParams != null) {
+                layoutParams.width = ViewGroup.LayoutParams.WRAP_CONTENT;
+                button.setLayoutParams(layoutParams);
+              }
             }
             button.setText(text);
           }
