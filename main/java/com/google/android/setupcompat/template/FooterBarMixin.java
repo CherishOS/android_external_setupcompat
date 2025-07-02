@@ -927,6 +927,9 @@ public class FooterBarMixin implements Mixin {
     if (PartnerConfigHelper.isGlifExpressiveEnabled(context)) {
       setButtonWidthForExpressiveStyle();
     }
+    if (VERSION.SDK_INT >= VERSION_CODES.LOLLIPOP) {
+      buttonContainer.requestApplyInsets();
+    }
   }
 
   private void setEvenlyWeightedButtons(

@@ -25,6 +25,7 @@ import android.content.pm.PackageManager.NameNotFoundException;
 import android.content.res.Configuration;
 import android.content.res.Resources;
 import android.content.res.Resources.NotFoundException;
+import android.content.res.TypedArray;
 import android.database.ContentObserver;
 import android.graphics.drawable.Drawable;
 import android.net.Uri;
@@ -95,6 +96,9 @@ public class PartnerConfigHelper {
   public static final String IS_ENHANCED_SETUP_DESIGN_METRICS_ENABLED =
       "isEnhancedSetupDesignMetricsEnabled";
 
+  @VisibleForTesting
+  public static final String IS_SUW_USE_MODAL_DIALOG_ENABLED = "isSuwUseModalDialogEnabled";
+
   /** The method name to get the if the keyboard focus enhancement enabled */
   @VisibleForTesting
   public static final String IS_KEYBOARD_FOCUS_ENHANCEMENT_ENABLED_METHOD =
@@ -153,6 +157,10 @@ public class PartnerConfigHelper {
   @VisibleForTesting public static Bundle applyGlifExpressiveBundle = null;
 
   @VisibleForTesting public static Bundle enableMetricsLoggingBundle = null;
+
+  @SuppressWarnings("NonFinalStaticField")
+  @VisibleForTesting
+  public static Bundle suwUseModalDialogBundle = null;
 
   @VisibleForTesting public static int savedOrientation = Configuration.ORIENTATION_PORTRAIT;
 
@@ -862,6 +870,7 @@ public class PartnerConfigHelper {
     applyGlifExpressiveBundle = null;
     keyboardFocusEnhancementBundle = null;
     enableMetricsLoggingBundle = null;
+    suwUseModalDialogBundle = null;
   }
 
   /**
@@ -1241,6 +1250,32 @@ public class PartnerConfigHelper {
 
     if (enableMetricsLoggingBundle != null && !enableMetricsLoggingBundle.isEmpty()) {
       return enableMetricsLoggingBundle.getBoolean(IS_ENHANCED_SETUP_DESIGN_METRICS_ENABLED, false);
+    }
+
+    return false;
+  }
+
+  /** Returns true if the SetupWizard use modal dialog. */
+  public static boolean isSuwUseModalDialogEnabled(@NonNull Context context) {
+    if (suwUseModalDialogBundle == null || suwUseModalDialogBundle.isEmpty()) {
+      try {
+        suwUseModalDialogBundle =
+            context
+                .getContentResolver()
+                .call(
+                    getContentUri(),
+                    IS_SUW_USE_MODAL_DIALOG_ENABLED,
+                    /* arg= */ null,
+                    /* extras= */ null);
+      } catch (IllegalArgumentException | SecurityException exception) {
+        Log.w(TAG, "Method " + IS_SUW_USE_MODAL_DIALOG_ENABLED + " is unknown");
+        suwUseModalDialogBundle = null;
+        return false;
+      }
+    }
+
+    if (suwUseModalDialogBundle != null && !suwUseModalDialogBundle.isEmpty()) {
+      return suwUseModalDialogBundle.getBoolean(IS_SUW_USE_MODAL_DIALOG_ENABLED, false);
     }
 
     return false;
