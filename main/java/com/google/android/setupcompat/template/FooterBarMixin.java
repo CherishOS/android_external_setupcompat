@@ -200,6 +200,7 @@ public class FooterBarMixin implements Mixin {
         if (buttonContainer != null) {
           Button button = buttonContainer.findViewById(id);
           if (button != null) {
+            button.setText(text);
             if (PartnerConfigHelper.isGlifExpressiveEnabled(context)) {
               setButtonWidthForExpressiveStyle();
             } else {
@@ -210,7 +211,6 @@ public class FooterBarMixin implements Mixin {
                 button.setLayoutParams(layoutParams);
               }
             }
-            button.setText(text);
           }
         }
       }

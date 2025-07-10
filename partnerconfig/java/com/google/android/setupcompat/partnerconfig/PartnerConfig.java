@@ -443,7 +443,13 @@ public enum PartnerConfig {
   CONFIG_LOADING_LOTTIE_FINAL_HOLD(
       PartnerConfigKey.KEY_LOADING_LOTTIE_FINAL_HOLD, ResourceType.ILLUSTRATION),
 
-  // The transition type to decide the transition between activities or fragments.
+  /**
+   * The transition type to decide the transition between activities or fragments.
+   *
+   * @deprecated Deprecated to use CONFIG_TRANSITION_SHARED_X_AXIS transition, so it never has
+   *     activity options input.
+   */
+  @Deprecated
   CONFIG_TRANSITION_TYPE(PartnerConfigKey.KEY_TRANSITION_TYPE, ResourceType.INTEGER),
 
   // The list of keypath and color map, applied to default animation when light theme.

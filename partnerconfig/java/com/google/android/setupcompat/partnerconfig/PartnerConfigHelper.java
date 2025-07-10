@@ -40,6 +40,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.VisibleForTesting;
 import androidx.window.embedding.ActivityEmbeddingController;
+import com.google.android.setupcompat.R;
 import com.google.android.setupcompat.partnerconfig.PartnerConfig.ResourceType;
 import com.google.android.setupcompat.util.BuildCompatUtils;
 import com.google.android.setupcompat.util.WizardManagerHelper;
@@ -107,6 +108,10 @@ public class PartnerConfigHelper {
   @VisibleForTesting
   public static final String GET_SUW_DEFAULT_THEME_STRING_METHOD = "suwDefaultThemeString";
 
+  @VisibleForTesting public static final String CALL_METHOD_GET_SUW_SESSION_ID = "getSuwSessionId";
+
+  @VisibleForTesting public static final String EXTRA_SUW_SESSION_ID_INT_64 = "suwSessionIdInt64";
+
   @VisibleForTesting public static final String SUW_PACKAGE_NAME = "com.google.android.setupwizard";
   @VisibleForTesting public static final String MATERIAL_YOU_RESOURCE_SUFFIX = "_material_you";
   @VisibleForTesting public static final String GLIF_EXPRESSIVE_RESOURCE_SUFFIX = "_expressive";
@@ -145,8 +150,6 @@ public class PartnerConfigHelper {
   private static int savedConfigUiMode;
 
   private static boolean savedConfigEmbeddedActivityMode;
-
-  @VisibleForTesting static boolean isAnySetupWizard = true;
 
   @VisibleForTesting static Bundle applyTransitionBundle = null;
 
@@ -1185,29 +1188,7 @@ public class PartnerConfigHelper {
    * Returns true if the SetupWizard supports Glif Expressive style inside or outside setup flow.
    */
   public static boolean isGlifExpressiveEnabled(@NonNull Context context) {
-    boolean isRequery = false;
-    Activity activity = null;
-    try {
-      activity = lookupActivityFromContext(context);
-    } catch (IllegalArgumentException ex) {
-      Log.w(TAG, "Failed to lookup activity from context: " + ex);
-    }
-    // Save inside/outside setup wizard flag into bundle
-    Bundle extras = null;
-    if (activity != null) {
-      extras = new Bundle();
-      boolean currentIsAnySetupWizard = WizardManagerHelper.isAnySetupWizard(activity.getIntent());
-      // if the setup state is not cached or the setup staty is different from the current state, we
-      // need to requery the flag from the provider.
-      if (isAnySetupWizard != currentIsAnySetupWizard) {
-        isAnySetupWizard = currentIsAnySetupWizard;
-        isRequery = true;
-        Log.i(TAG, "Need to requery the flag isGlifExpressiveEnabled from provider");
-      }
-      extras.putBoolean(WizardManagerHelper.EXTRA_IS_SETUP_FLOW, currentIsAnySetupWizard);
-    }
-
-    if (applyGlifExpressiveBundle == null || applyGlifExpressiveBundle.isEmpty() || isRequery) {
+    if (applyGlifExpressiveBundle == null || applyGlifExpressiveBundle.isEmpty()) {
       try {
         applyGlifExpressiveBundle =
             context
@@ -1216,7 +1197,7 @@ public class PartnerConfigHelper {
                     getContentUri(),
                     IS_GLIF_EXPRESSIVE_ENABLED,
                     /* arg= */ null,
-                    /* extras= */ extras);
+                    /* extras= */ null);
       } catch (IllegalArgumentException | SecurityException exception) {
         Log.w(TAG, "isGlifExpressiveEnabled status is unknown; return as false.");
       }
@@ -1224,6 +1205,19 @@ public class PartnerConfigHelper {
 
     if (applyGlifExpressiveBundle != null && !applyGlifExpressiveBundle.isEmpty()) {
       return applyGlifExpressiveBundle.getBoolean(IS_GLIF_EXPRESSIVE_ENABLED, false);
+    } else {
+      if (context.getTheme() != null) {
+        TypedArray a =
+            context
+                .getTheme()
+                .obtainStyledAttributes(new int[] {R.attr.sucGlifExpressiveStyleEnabled});
+        boolean isGlifExpressiveStyleEnabled = a.getBoolean(0, false);
+        a.recycle();
+        Log.i(TAG, "isGlifExpressiveStyleEnabled is " + isGlifExpressiveStyleEnabled);
+        if (isGlifExpressiveStyleEnabled) {
+          return true;
+        }
+      }
     }
 
     return false;
@@ -1279,6 +1273,48 @@ public class PartnerConfigHelper {
     }
 
     return false;
+  }
+
+  /**
+   * Checks whether the modal dialog is eligible to be displayed. The dialog is considered eligible
+   * only if two conditions are met: 1. The feature is enabled via its feature flag in {@link
+   * PartnerConfigHelper}. 2. The check is occurring during the initial Setup Wizard lifecycle. 3.
+   * The GlifExpressive theme is enabled.
+   *
+   * @return {@code true} if the modal dialog can be shown, {@code false} otherwise.
+   */
+  public static boolean shouldApplyModalDialog(@NonNull Context context) {
+    return isSuwUseModalDialogEnabled(context)
+        && isGlifExpressiveEnabled(context)
+        && !WizardManagerHelper.isUserSetupComplete(context);
+  }
+
+  /**
+   * Returns the SUW session ID.
+   *
+   * <p>Returns 0 if the current session is not {@link
+   * com.google.android.setupwizard.lifecycle.LifecycleManager#LIFECYCLE_DEFAULT} or {@link
+   * com.google.android.setupwizard.lifecycle.LifecycleManager#LIFECYCLE_DEFERRED}.
+   */
+  public static long getSuwSessionId(@NonNull Context context) {
+    Bundle sessionIdBundle = null;
+    try {
+      sessionIdBundle =
+          context
+              .getContentResolver()
+              .call(
+                  getContentUri(),
+                  CALL_METHOD_GET_SUW_SESSION_ID,
+                  /* arg= */ null,
+                  /* extras= */ null);
+    } catch (IllegalArgumentException | SecurityException exception) {
+      Log.w(TAG, "Failed to get SUW session ID; return 0.");
+      return 0L;
+    }
+    if (sessionIdBundle != null) {
+      return sessionIdBundle.getLong(EXTRA_SUW_SESSION_ID_INT_64, 0L);
+    }
+    return 0L;
   }
 
   @VisibleForTesting
