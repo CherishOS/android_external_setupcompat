@@ -92,7 +92,6 @@ android_library {
         ":Aidls",
         ":AidlsPortal",
         ":Srcs",
-        ":SrcsPartnerConfig",
         ":SrcsPortal",
     ],
     static_libs: [
@@ -100,6 +99,7 @@ android_library {
         "androidx.window_window",
         "com.google.android.material_material",
         "error_prone_annotations",
+        "PartnerConfig",
     ],
     min_sdk_version: "21",
     sdk_version: "current",
@@ -124,9 +124,37 @@ android_library {
     srcs: [
         ":Srcs",
         ":SrcsBts",
-        ":SrcsPartnerConfig",
         ":Aidls",
         ":AidlsBts",
+    ],
+    static_libs: [
+        "androidx.annotation_annotation",
+        "androidx.window_window",
+        "com.google.android.material_material",
+        "error_prone_annotations",
+        "PartnerConfig",
+    ],
+    min_sdk_version: "21",
+    sdk_version: "current",
+    optimize: {
+        proguard_flags_files: ["proguard.flags"],
+    },
+    lint: {
+        baseline_filename: "lint-baseline.xml",
+    },
+}
+
+android_library {
+    name: "PartnerConfig",
+    manifest: "AndroidManifest.xml",
+    resource_dirs: [
+        "partnerconfig/res",
+        "main/res",
+    ],
+    srcs: [
+        ":SrcsPartnerConfig",
+        ":Srcs",
+        ":Aidls",
     ],
     static_libs: [
         "androidx.annotation_annotation",
