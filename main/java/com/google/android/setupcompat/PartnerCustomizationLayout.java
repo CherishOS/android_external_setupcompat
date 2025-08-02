@@ -553,11 +553,21 @@ public class PartnerCustomizationLayout extends TemplateLayout {
               footerBarPaddingBottom + insets.getSystemWindowInsetBottom());
           view.setPadding(view.getPaddingLeft(), view.getPaddingTop(), view.getPaddingRight(), 0);
         } else {
-          view.setPadding(
-              view.getPaddingLeft(),
-              view.getPaddingTop(),
-              view.getPaddingRight(),
-              footerBarPaddingBottom + insets.getSystemWindowInsetBottom());
+          View landscapeView = findViewById(R.id.suc_intrinsic_size_layout);
+          if (landscapeView != null) {
+            landscapeView.setPadding(
+                landscapeView.getPaddingLeft(),
+                landscapeView.getPaddingTop(),
+                landscapeView.getPaddingRight(),
+                footerBarPaddingBottom + insets.getSystemWindowInsetBottom());
+            view.setPadding(view.getPaddingLeft(), view.getPaddingTop(), view.getPaddingRight(), 0);
+          } else {
+            view.setPadding(
+                view.getPaddingLeft(),
+                view.getPaddingTop(),
+                view.getPaddingRight(),
+                footerBarPaddingBottom + insets.getSystemWindowInsetBottom());
+          }
         }
       }
     }
