@@ -157,6 +157,9 @@ public class PartnerConfigHelper {
   @VisibleForTesting
   public static Bundle applyForceTwoPaneBundle = null;
 
+  // This ensures all threads synchronize on the same object.
+  private static final Object GLIF_EXPRESSIVE_BUNDLE_LOCK = new Object();
+
   @VisibleForTesting public static Bundle applyGlifExpressiveBundle = null;
 
   @VisibleForTesting public static Bundle enableMetricsLoggingBundle = null;
@@ -1188,25 +1191,29 @@ public class PartnerConfigHelper {
    * Returns true if the SetupWizard supports Glif Expressive style inside or outside setup flow.
    */
   public static boolean isGlifExpressiveEnabled(@NonNull Context context) {
-    if (applyGlifExpressiveBundle == null || applyGlifExpressiveBundle.isEmpty()) {
-      try {
-        applyGlifExpressiveBundle =
-            context
-                .getContentResolver()
-                .call(
-                    getContentUri(),
-                    IS_GLIF_EXPRESSIVE_ENABLED,
-                    /* arg= */ null,
-                    /* extras= */ null);
-      } catch (IllegalArgumentException | SecurityException exception) {
-        Log.w(TAG, "isGlifExpressiveEnabled status is unknown; return as false.");
+    // Synchronize on the class object for a static method. This ensures only one thread can execute
+    // this block at a time
+    synchronized (GLIF_EXPRESSIVE_BUNDLE_LOCK) {
+      if (applyGlifExpressiveBundle == null || applyGlifExpressiveBundle.isEmpty()) {
+        try {
+          applyGlifExpressiveBundle =
+              context
+                  .getContentResolver()
+                  .call(
+                      getContentUri(),
+                      IS_GLIF_EXPRESSIVE_ENABLED,
+                      /* arg= */ null,
+                      /* extras= */ null);
+        } catch (IllegalArgumentException | SecurityException exception) {
+          Log.w(TAG, "isGlifExpressiveEnabled status is unknown; return as false.");
+        }
+      }
+      Bundle resultBundle = applyGlifExpressiveBundle;
+      if (resultBundle != null && !resultBundle.isEmpty()) {
+        return resultBundle.getBoolean(IS_GLIF_EXPRESSIVE_ENABLED, false);
       }
     }
-
-    if (applyGlifExpressiveBundle != null && !applyGlifExpressiveBundle.isEmpty()) {
-      return applyGlifExpressiveBundle.getBoolean(IS_GLIF_EXPRESSIVE_ENABLED, false);
-    } else {
-      if (context.getTheme() != null) {
+    if (context.getTheme() != null) {
         TypedArray a =
             context
                 .getTheme()
@@ -1216,7 +1223,6 @@ public class PartnerConfigHelper {
         Log.i(TAG, "isGlifExpressiveStyleEnabled is " + isGlifExpressiveStyleEnabled);
         if (isGlifExpressiveStyleEnabled) {
           return true;
-        }
       }
     }
 

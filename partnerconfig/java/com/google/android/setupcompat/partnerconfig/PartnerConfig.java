@@ -226,6 +226,10 @@ public enum PartnerConfig {
   CONFIG_HEADER_CONTAINER_MARGIN_BOTTOM(
       PartnerConfigKey.KEY_HEADER_CONTAINER_MARGIN_BOTTOM, ResourceType.DIMENSION),
 
+  // The flag to enable/disable the common style of the progress bar on header area
+  CONFIG_HEADER_PROGRESS_BAR_COMMON_STYLE(
+      PartnerConfigKey.KEY_HEADER_PROGRESS_BAR_COMMON_STYLE, ResourceType.BOOL),
+
   // Auto text size enabled status
   CONFIG_HEADER_AUTO_SIZE_ENABLED(PartnerConfigKey.KEY_HEADER_AUTO_SIZE_ENABLED, ResourceType.BOOL),
 
@@ -530,7 +534,11 @@ public enum PartnerConfig {
 
   // The adapt window width to be part of determining two pane style condition
   CONFIG_TWO_PANE_ADAPT_WINDOW_WIDTH(
-      PartnerConfigKey.KEY_TWO_PANE_ADAPT_WINDOW_WIDTH, ResourceType.INTEGER);
+      PartnerConfigKey.KEY_TWO_PANE_ADAPT_WINDOW_WIDTH, ResourceType.INTEGER),
+
+  // The selected radius of the card view.
+  CONFIG_CARD_VIEW_SELECTED_RADIUS(
+      PartnerConfigKey.KEY_CARD_VIEW_SELECTED_RADIUS, ResourceType.DIMENSION);
 
   /** Resource type of the partner resources type. */
   public enum ResourceType {

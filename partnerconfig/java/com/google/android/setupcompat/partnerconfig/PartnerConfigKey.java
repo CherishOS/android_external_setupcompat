@@ -74,6 +74,7 @@ import java.lang.annotation.RetentionPolicy;
   PartnerConfigKey.KEY_HEADER_TEXT_MARGIN_TOP,
   PartnerConfigKey.KEY_HEADER_TEXT_MARGIN_BOTTOM,
   PartnerConfigKey.KEY_HEADER_CONTAINER_MARGIN_BOTTOM,
+  PartnerConfigKey.KEY_HEADER_PROGRESS_BAR_COMMON_STYLE,
   PartnerConfigKey.KEY_HEADER_AUTO_SIZE_ENABLED,
   PartnerConfigKey.KEY_HEADER_AUTO_SIZE_MAX_TEXT_SIZE,
   PartnerConfigKey.KEY_HEADER_AUTO_SIZE_MIN_TEXT_SIZE,
@@ -156,6 +157,7 @@ import java.lang.annotation.RetentionPolicy;
   PartnerConfigKey.KEY_PROGRESS_BAR_MARGIN_TOP,
   PartnerConfigKey.KEY_PROGRESS_BAR_MARGIN_BOTTOM,
   PartnerConfigKey.KEY_TWO_PANE_ADAPT_WINDOW_WIDTH,
+  PartnerConfigKey.KEY_CARD_VIEW_SELECTED_RADIUS,
 })
 // TODO: can be removed and always reference PartnerConfig.getResourceName()?
 @VisibleForTesting(otherwise = VisibleForTesting.PACKAGE_PRIVATE)
@@ -329,6 +331,9 @@ public @interface PartnerConfigKey {
 
   // Margin bottom of the header container
   String KEY_HEADER_CONTAINER_MARGIN_BOTTOM = "setup_design_header_container_margin_bottom";
+
+  //  The flag to enable/disable the common style of the progress bar on header area
+  String KEY_HEADER_PROGRESS_BAR_COMMON_STYLE = "setup_design_progress_bar_common_style";
 
   // Auto text size enabled status
   String KEY_HEADER_AUTO_SIZE_ENABLED = "setup_design_header_auto_size_enabled";
@@ -591,4 +596,7 @@ public @interface PartnerConfigKey {
 
   // A adapt window width to determine how large to show two panel.
   String KEY_TWO_PANE_ADAPT_WINDOW_WIDTH = "setup_compat_two_pane_adapt_window_width";
+
+  // The selected radius of the card view.
+  String KEY_CARD_VIEW_SELECTED_RADIUS = "setup_design_card_view_selected_radius";
 }
