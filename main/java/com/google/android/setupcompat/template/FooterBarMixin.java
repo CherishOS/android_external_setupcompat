@@ -121,7 +121,8 @@ public class FooterBarMixin implements Mixin {
   private int containerVisibility;
   private boolean downButtonEnable;
 
-  @VisibleForTesting final int footerBarButtonMiddleSpacing;
+  @VisibleForTesting int footerBarButtonMiddleSpacing;
+  @VisibleForTesting int footerBarButtonStackMiddleSpacing;
 
   @VisibleForTesting public final FooterBarMixinMetrics metrics = new FooterBarMixinMetrics();
 
@@ -293,6 +294,9 @@ public class FooterBarMixin implements Mixin {
             R.styleable.SucFooterBarMixin_sucFooterBarSecondaryFooterButtonDisabledTextColor, 0);
     footerBarButtonMiddleSpacing =
         a.getDimensionPixelSize(R.styleable.SucFooterBarMixin_sucFooterBarButtonMiddleSpacing, 0);
+    footerBarButtonStackMiddleSpacing =
+        a.getDimensionPixelSize(
+            R.styleable.SucFooterBarMixin_sucFooterBarButtonStackMiddleSpacing, 0);
 
     int primaryBtn =
         a.getResourceId(R.styleable.SucFooterBarMixin_sucFooterBarPrimaryFooterButton, 0);
@@ -530,6 +534,8 @@ public class FooterBarMixin implements Mixin {
                 getPartnerTheme(
                     footerButton,
                     /* defaultPartnerTheme= */ defaultPartnerTheme,
+                    /* usePrimaryStyle= */ true,
+                    applyDynamicColor,
                     /* buttonBackgroundColorConfig= */ PartnerConfig
                         .CONFIG_FOOTER_PRIMARY_BUTTON_BG_COLOR))
             .setButtonBackgroundConfig(PartnerConfig.CONFIG_FOOTER_PRIMARY_BUTTON_BG_COLOR)
@@ -649,6 +655,8 @@ public class FooterBarMixin implements Mixin {
                 getPartnerTheme(
                     footerButton,
                     /* defaultPartnerTheme= */ defaultPartnerTheme,
+                    usePrimaryStyle,
+                    applyDynamicColor,
                     /* buttonBackgroundColorConfig= */ usePrimaryStyle
                         ? PartnerConfig.CONFIG_FOOTER_PRIMARY_BUTTON_BG_COLOR
                         : PartnerConfig.CONFIG_FOOTER_SECONDARY_BUTTON_BG_COLOR))
@@ -773,6 +781,8 @@ public class FooterBarMixin implements Mixin {
                 getPartnerTheme(
                     footerButton,
                     /* defaultPartnerTheme= */ R.style.SucGlifMaterialButton_Primary,
+                    usePrimaryStyle,
+                    applyDynamicColor,
                     /* buttonBackgroundColorConfig= */ usePrimaryStyle
                         ? PartnerConfig.CONFIG_FOOTER_PRIMARY_BUTTON_BG_COLOR
                         : PartnerConfig.CONFIG_FOOTER_SECONDARY_BUTTON_BG_COLOR))
@@ -981,6 +991,7 @@ public class FooterBarMixin implements Mixin {
             buttonContainer.setGravity(Gravity.END);
           }
 
+          updateMiddleSpacing();
           // TODO: b/364981820 - Use partner config to allow user to customize button width.
           int availableFooterBarWidth =
               containerWidth
@@ -1039,6 +1050,18 @@ public class FooterBarMixin implements Mixin {
           // Set back the button container visibility to its original state.
           buttonContainer.setVisibility(containerVisibility);
         });
+  }
+
+  private void updateMiddleSpacing() {
+    boolean partnerConfigAvailable =
+        PartnerConfigHelper.get(context)
+            .isPartnerConfigAvailable(PartnerConfig.CONFIG_FOOTER_BUTTON_MIDDLE_SPACE);
+    if (partnerConfigAvailable) {
+      footerBarButtonMiddleSpacing =
+          (int)
+              PartnerConfigHelper.get(context)
+                  .getDimension(context, PartnerConfig.CONFIG_FOOTER_BUTTON_MIDDLE_SPACE);
+    }
   }
 
   /** Sets down button for expressive style. */
@@ -1134,8 +1157,9 @@ public class FooterBarMixin implements Mixin {
 
     if (isPrimaryButtonTextOverFlowing || isSecondaryButtonTextOverFlowing) {
       if (buttonContainer instanceof ButtonBarLayout buttonBarLayout) {
+        updateStackMiddleSpacing();
         buttonBarLayout.setStackedButtonForExpressiveStyle(true);
-        int stackButtonMiddleSpacing = footerBarButtonMiddleSpacing / 2;
+        int stackButtonMiddleSpacing = footerBarButtonStackMiddleSpacing / 2;
         secondaryLayoutParams.width = availableFooterBarWidth;
         secondaryLayoutParams.topMargin = stackButtonMiddleSpacing;
         secondaryButton.setLayoutParams(secondaryLayoutParams);
@@ -1163,6 +1187,18 @@ public class FooterBarMixin implements Mixin {
     return false;
   }
 
+  private void updateStackMiddleSpacing() {
+    boolean partnerConfigAvailable =
+        PartnerConfigHelper.get(context)
+            .isPartnerConfigAvailable(PartnerConfig.CONFIG_FOOTER_BUTTON_STACK_MIDDLE_SPACE);
+    if (partnerConfigAvailable) {
+      footerBarButtonStackMiddleSpacing =
+          (int)
+              PartnerConfigHelper.get(context)
+                  .getDimension(context, PartnerConfig.CONFIG_FOOTER_BUTTON_STACK_MIDDLE_SPACE);
+    }
+  }
+
   // TODO: b/400831621 -  Consider to combine this method to #stackButtonIfTextOverFlow
   private void forceStackButtonInThreeButtonMode(
       Button primaryButton,
@@ -1176,7 +1212,7 @@ public class FooterBarMixin implements Mixin {
 
     if (buttonContainer instanceof ButtonBarLayout buttonBarLayout) {
       buttonBarLayout.setStackedButtonForExpressiveStyle(true);
-      int stackButtonMiddleSpacing = footerBarButtonMiddleSpacing / 2;
+      int stackButtonMiddleSpacing = footerBarButtonStackMiddleSpacing / 2;
       secondaryLayoutParams.width = availableFooterBarWidth;
       secondaryLayoutParams.topMargin = stackButtonMiddleSpacing;
       secondaryButton.setLayoutParams(secondaryLayoutParams);
@@ -1294,6 +1330,8 @@ public class FooterBarMixin implements Mixin {
   private int getPartnerTheme(
       FooterButton footerButton,
       int defaultPartnerTheme,
+      boolean usePrimaryStyle,
+      boolean applyDynamicColor,
       PartnerConfig buttonBackgroundColorConfig) {
     int overrideTheme = footerButton.getTheme();
 
@@ -1308,12 +1346,16 @@ public class FooterBarMixin implements Mixin {
     // button style.
     if (applyPartnerResources) {
       int color = PartnerConfigHelper.get(context).getColor(context, buttonBackgroundColorConfig);
-      if (color == Color.TRANSPARENT) {
+      // If the color is transparent or dynamic color is applied for secondary button, use the
+      // secondary button style.
+      if (color == Color.TRANSPARENT || (!usePrimaryStyle && applyDynamicColor)) {
         overrideTheme =
             PartnerConfigHelper.isGlifExpressiveEnabled(context)
                 ? R.style.SucGlifMaterialButton_Secondary
                 : R.style.SucPartnerCustomizationButton_Secondary;
       } else {
+        // If the color is not transparent and dynamic color is not applied, use the primary button
+        // style to customize the secondary button background color.
         overrideTheme =
             PartnerConfigHelper.isGlifExpressiveEnabled(context)
                 ? R.style.SucGlifMaterialButton_Primary
