@@ -60,6 +60,8 @@ import java.lang.annotation.RetentionPolicy;
   PartnerConfigKey.KEY_FOOTER_SECONDARY_BUTTON_BG_COLOR,
   PartnerConfigKey.KEY_FOOTER_SECONDARY_BUTTON_TEXT_COLOR,
   PartnerConfigKey.KEY_FOOTER_SECONDARY_BUTTON_MARGIN_START,
+  PartnerConfigKey.KEY_FOOTER_BUTTON_MIDDLE_SPACE,
+  PartnerConfigKey.KEY_FOOTER_BUTTON_STACK_MIDDLE_SPACE,
   PartnerConfigKey.KEY_SECONDARY_BUTTON_DISABLED_TEXT_COLOR,
   PartnerConfigKey.KEY_LAYOUT_BACKGROUND_COLOR,
   PartnerConfigKey.KEY_LAYOUT_MARGIN_START,
@@ -277,6 +279,12 @@ public @interface PartnerConfigKey {
   // Disabled text color of the secondary footer button
   String KEY_SECONDARY_BUTTON_DISABLED_TEXT_COLOR =
       "setup_compat_secondary_button_disabled_text_color";
+
+  // Middle space of the footer button
+  String KEY_FOOTER_BUTTON_MIDDLE_SPACE = "setup_compat_footer_button_middle_space";
+
+  // Middle space of the stacked footer button
+  String KEY_FOOTER_BUTTON_STACK_MIDDLE_SPACE = "setup_compat_footer_button_stack_middle_space";
 
   // Background color of layout
   String KEY_LAYOUT_BACKGROUND_COLOR = "setup_design_layout_bg_color";

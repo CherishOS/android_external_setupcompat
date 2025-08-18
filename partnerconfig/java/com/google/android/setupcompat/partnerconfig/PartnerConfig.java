@@ -164,6 +164,14 @@ public enum PartnerConfig {
   CONFIG_FOOTER_SECONDARY_BUTTON_MARGIN_START(
       PartnerConfigKey.KEY_FOOTER_SECONDARY_BUTTON_MARGIN_START, ResourceType.DIMENSION),
 
+  // Middle space of the footer button
+  CONFIG_FOOTER_BUTTON_MIDDLE_SPACE(
+      PartnerConfigKey.KEY_FOOTER_BUTTON_MIDDLE_SPACE, ResourceType.DIMENSION),
+
+  // Middle space of the stacked footer button
+  CONFIG_FOOTER_BUTTON_STACK_MIDDLE_SPACE(
+      PartnerConfigKey.KEY_FOOTER_BUTTON_STACK_MIDDLE_SPACE, ResourceType.DIMENSION),
+
   // Background color of layout
   CONFIG_LAYOUT_BACKGROUND_COLOR(PartnerConfigKey.KEY_LAYOUT_BACKGROUND_COLOR, ResourceType.COLOR),
 
