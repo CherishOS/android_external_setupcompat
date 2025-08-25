@@ -101,7 +101,7 @@ android_library {
         "error_prone_annotations",
         "PartnerConfig",
     ],
-    min_sdk_version: "21",
+    min_sdk_version: "23",
     sdk_version: "current",
     optimize: {
         proguard_flags_files: ["proguard.flags"],
@@ -134,7 +134,7 @@ android_library {
         "error_prone_annotations",
         "PartnerConfig",
     ],
-    min_sdk_version: "21",
+    min_sdk_version: "23",
     sdk_version: "current",
     optimize: {
         proguard_flags_files: ["proguard.flags"],
@@ -162,7 +162,7 @@ android_library {
         "com.google.android.material_material",
         "error_prone_annotations",
     ],
-    min_sdk_version: "21",
+    min_sdk_version: "23",
     sdk_version: "current",
     optimize: {
         proguard_flags_files: ["proguard.flags"],
