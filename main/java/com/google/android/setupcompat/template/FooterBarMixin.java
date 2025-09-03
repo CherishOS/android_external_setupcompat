@@ -68,6 +68,7 @@ import com.google.android.setupcompat.util.KeyboardHelper;
 import com.google.android.setupcompat.util.Logger;
 import com.google.android.setupcompat.view.ButtonBarLayout;
 import java.util.Locale;
+import java.util.Optional;
 
 /**
  * A {@link Mixin} for managing buttons. By default, the button bar expects that buttons on the
@@ -137,7 +138,6 @@ public class FooterBarMixin implements Mixin {
           if (button != null) {
             button.setEnabled(enabled);
 
-            // TODO: b/364981299 - Use partner config to allow user to customize text color.
             if (PartnerConfigHelper.isGlifExpressiveEnabled(context)) {
               if (id == primaryButtonId || isSecondaryButtonInPrimaryStyle) {
                 updateTextColorForButton(
@@ -154,17 +154,16 @@ public class FooterBarMixin implements Mixin {
                         ? footerBarSecondaryButtonEnabledTextColor
                         : footerBarSecondaryButtonDisabledTextColor);
               }
-            } else {
-              if (applyPartnerResources && !applyDynamicColor) {
-                updateButtonTextColorWithStates(
-                    button,
-                    (id == primaryButtonId || isSecondaryButtonInPrimaryStyle)
-                        ? PartnerConfig.CONFIG_FOOTER_PRIMARY_BUTTON_TEXT_COLOR
-                        : PartnerConfig.CONFIG_FOOTER_SECONDARY_BUTTON_TEXT_COLOR,
-                    (id == primaryButtonId || isSecondaryButtonInPrimaryStyle)
-                        ? PartnerConfig.CONFIG_FOOTER_PRIMARY_BUTTON_DISABLED_TEXT_COLOR
-                        : PartnerConfig.CONFIG_FOOTER_SECONDARY_BUTTON_DISABLED_TEXT_COLOR);
-              }
+            }
+            if (applyPartnerResources && !applyDynamicColor) {
+              updateButtonTextColorWithStates(
+                  button,
+                  (id == primaryButtonId || isSecondaryButtonInPrimaryStyle)
+                      ? PartnerConfig.CONFIG_FOOTER_PRIMARY_BUTTON_TEXT_COLOR
+                      : PartnerConfig.CONFIG_FOOTER_SECONDARY_BUTTON_TEXT_COLOR,
+                  (id == primaryButtonId || isSecondaryButtonInPrimaryStyle)
+                      ? PartnerConfig.CONFIG_FOOTER_PRIMARY_BUTTON_DISABLED_TEXT_COLOR
+                      : PartnerConfig.CONFIG_FOOTER_SECONDARY_BUTTON_DISABLED_TEXT_COLOR);
             }
           }
         }
@@ -570,8 +569,6 @@ public class FooterBarMixin implements Mixin {
     primaryButton = footerButton;
     primaryButtonPartnerConfigForTesting = footerButtonPartnerConfig;
     onFooterButtonInflated(button, footerBarPrimaryBackgroundColor);
-    onFooterButtonApplyPartnerResource(button, footerButtonPartnerConfig);
-    // TODO: b/364981299 - Use partner config to allow user to customize text color.
     if (PartnerConfigHelper.isGlifExpressiveEnabled(context)) {
       boolean enabled = primaryButton.isEnabled();
       updateTextColorForButton(
@@ -581,6 +578,7 @@ public class FooterBarMixin implements Mixin {
               ? footerBarPrimaryButtonEnabledTextColor
               : footerBarPrimaryButtonDisabledTextColor);
     }
+    onFooterButtonApplyPartnerResource(button, footerButtonPartnerConfig);
     if (loggingObserver != null) {
       loggingObserver.log(
           new ButtonInflatedEvent(getPrimaryButtonView(), LoggingObserver.ButtonType.PRIMARY));
@@ -700,8 +698,6 @@ public class FooterBarMixin implements Mixin {
     secondaryButtonPartnerConfigForTesting = footerButtonPartnerConfig;
 
     onFooterButtonInflated(button, footerBarSecondaryBackgroundColor);
-    onFooterButtonApplyPartnerResource(button, footerButtonPartnerConfig);
-    // TODO: b/364981299 - Use partner config to allow user to customize text color.
     if (PartnerConfigHelper.isGlifExpressiveEnabled(context)) {
       boolean enabled = secondaryButton.isEnabled();
       if (usePrimaryStyle) {
@@ -720,6 +716,7 @@ public class FooterBarMixin implements Mixin {
                 : footerBarSecondaryButtonDisabledTextColor);
       }
     }
+    onFooterButtonApplyPartnerResource(button, footerButtonPartnerConfig);
     if (loggingObserver != null) {
       loggingObserver.log(new ButtonInflatedEvent(button, LoggingObserver.ButtonType.SECONDARY));
       footerButton.setLoggingObserver(loggingObserver);
@@ -821,8 +818,6 @@ public class FooterBarMixin implements Mixin {
     tertiaryButton = footerButton;
     tertiaryButtonPartnerConfigForTesting = footerButtonPartnerConfig;
     onFooterButtonInflated(button, footerBarPrimaryBackgroundColor);
-    onFooterButtonApplyPartnerResource(button, footerButtonPartnerConfig);
-
     boolean enabled = tertiaryButton.isEnabled();
     if (usePrimaryStyle) {
       updateTextColorForButton(
@@ -839,6 +834,7 @@ public class FooterBarMixin implements Mixin {
               ? footerBarSecondaryButtonEnabledTextColor
               : footerBarSecondaryButtonDisabledTextColor);
     }
+    onFooterButtonApplyPartnerResource(button, footerButtonPartnerConfig);
 
     // Make sure the position of buttons are correctly and prevent tertiary button create twice or
     // more.
@@ -1004,8 +1000,6 @@ public class FooterBarMixin implements Mixin {
             forceStackButtonInThreeButtonMode(
                 primaryButton, secondaryButton, tertiaryButton, availableFooterBarWidth);
           } else if (isBothButtons(primaryButton, secondaryButton)) {
-            LayoutParams primaryLayoutParams = (LayoutParams) primaryButton.getLayoutParams();
-            LayoutParams secondaryLayoutParams = (LayoutParams) secondaryButton.getLayoutParams();
             maxButtonWidth = availableFooterBarWidth / 2;
 
             boolean isButtonStacked =
@@ -1016,21 +1010,20 @@ public class FooterBarMixin implements Mixin {
               // When the button is not stacked, the buttons require to consider the margins for the
               // footer bar available width. The button margins might be set by default in the
               // Material button style.
+              LayoutParams primaryLayoutParams = (LayoutParams) primaryButton.getLayoutParams();
+              LayoutParams secondaryLayoutParams = (LayoutParams) secondaryButton.getLayoutParams();
               maxButtonWidth =
                   (availableFooterBarWidth
                           - primaryLayoutParams.getMarginStart()
                           - secondaryLayoutParams.getMarginEnd())
                       / 2;
-              if (primaryLayoutParams != null) {
-                primaryLayoutParams.width = maxButtonWidth;
-                primaryLayoutParams.setMarginStart(footerBarButtonMiddleSpacing / 2);
-                primaryButton.setLayoutParams(primaryLayoutParams);
-              }
-              if (secondaryLayoutParams != null) {
-                secondaryLayoutParams.width = maxButtonWidth;
-                secondaryLayoutParams.setMarginEnd(footerBarButtonMiddleSpacing / 2);
-                secondaryButton.setLayoutParams(secondaryLayoutParams);
-              }
+              setPrimaryButtonLayoutParams(
+                  primaryButton, maxButtonWidth, 0, Optional.of(footerBarButtonMiddleSpacing / 2));
+              setSecondaryButtonLayoutParams(
+                  secondaryButton,
+                  maxButtonWidth,
+                  0,
+                  Optional.of(footerBarButtonMiddleSpacing / 2));
             }
           } else if (isPrimaryButtonOnly(primaryButton, secondaryButton)) {
             LayoutParams primaryLayoutParams = (LayoutParams) primaryButton.getLayoutParams();
@@ -1107,8 +1100,6 @@ public class FooterBarMixin implements Mixin {
       Button secondaryButton,
       float maxButtonWidth,
       int availableFooterBarWidth) {
-    LayoutParams primaryLayoutParams = (LayoutParams) primaryButton.getLayoutParams();
-    LayoutParams secondaryLayoutParams = (LayoutParams) secondaryButton.getLayoutParams();
 
     String primaryText = primaryButton.getText().toString();
     Paint primaryTextPaint = new Paint();
@@ -1160,28 +1151,27 @@ public class FooterBarMixin implements Mixin {
         updateStackMiddleSpacing();
         buttonBarLayout.setStackedButtonForExpressiveStyle(true);
         int stackButtonMiddleSpacing = footerBarButtonStackMiddleSpacing / 2;
-        secondaryLayoutParams.width = availableFooterBarWidth;
-        secondaryLayoutParams.topMargin = stackButtonMiddleSpacing;
-        secondaryButton.setLayoutParams(secondaryLayoutParams);
 
-        primaryLayoutParams.width = availableFooterBarWidth;
-        primaryLayoutParams.bottomMargin = stackButtonMiddleSpacing;
-        primaryButton.setLayoutParams(primaryLayoutParams);
+        setPrimaryButtonLayoutParams(
+            primaryButton, availableFooterBarWidth, stackButtonMiddleSpacing, Optional.empty());
+        setSecondaryButtonLayoutParams(
+            secondaryButton, availableFooterBarWidth, stackButtonMiddleSpacing, Optional.empty());
         return true;
       }
     } else {
       // Button is not stacked, we need to set the button width and margin to be side by side.
       if (buttonContainer instanceof ButtonBarLayout buttonBarLayout) {
         buttonBarLayout.setStackedButtonForExpressiveStyle(false);
-        primaryLayoutParams.width = availableFooterBarWidth;
-        primaryLayoutParams.setMarginStart(footerBarButtonMiddleSpacing / 2);
-        primaryLayoutParams.bottomMargin = 0;
-        primaryButton.setLayoutParams(primaryLayoutParams);
-
-        secondaryLayoutParams.width = availableFooterBarWidth;
-        secondaryLayoutParams.setMarginEnd(footerBarButtonMiddleSpacing / 2);
-        secondaryLayoutParams.topMargin = 0;
-        secondaryButton.setLayoutParams(secondaryLayoutParams);
+        setPrimaryButtonLayoutParams(
+            primaryButton,
+            availableFooterBarWidth,
+            0,
+            Optional.of(footerBarButtonMiddleSpacing / 2));
+        setSecondaryButtonLayoutParams(
+            secondaryButton,
+            availableFooterBarWidth,
+            0,
+            Optional.of(footerBarButtonMiddleSpacing / 2));
       }
     }
     return false;
@@ -1199,33 +1189,91 @@ public class FooterBarMixin implements Mixin {
     }
   }
 
-  // TODO: b/400831621 -  Consider to combine this method to #stackButtonIfTextOverFlow
-  private void forceStackButtonInThreeButtonMode(
+  @VisibleForTesting(otherwise = VisibleForTesting.PRIVATE)
+  void forceStackButtonInThreeButtonMode(
       Button primaryButton,
       Button secondaryButton,
       Button tertiaryButton,
       int availableFooterBarWidth) {
-
-    LayoutParams primaryLayoutParams = (LayoutParams) primaryButton.getLayoutParams();
-    LayoutParams secondaryLayoutParams = (LayoutParams) secondaryButton.getLayoutParams();
-    LayoutParams tertiaryLayoutParams = (LayoutParams) tertiaryButton.getLayoutParams();
-
     if (buttonContainer instanceof ButtonBarLayout buttonBarLayout) {
+      updateStackMiddleSpacing();
       buttonBarLayout.setStackedButtonForExpressiveStyle(true);
       int stackButtonMiddleSpacing = footerBarButtonStackMiddleSpacing / 2;
-      secondaryLayoutParams.width = availableFooterBarWidth;
-      secondaryLayoutParams.topMargin = stackButtonMiddleSpacing;
-      secondaryButton.setLayoutParams(secondaryLayoutParams);
 
-      tertiaryLayoutParams.width = availableFooterBarWidth;
-      tertiaryLayoutParams.topMargin = stackButtonMiddleSpacing;
-      tertiaryLayoutParams.bottomMargin = stackButtonMiddleSpacing;
-      tertiaryButton.setLayoutParams(tertiaryLayoutParams);
-
-      primaryLayoutParams.width = availableFooterBarWidth;
-      primaryLayoutParams.bottomMargin = stackButtonMiddleSpacing;
-      primaryButton.setLayoutParams(primaryLayoutParams);
+      setPrimaryButtonLayoutParams(
+          primaryButton, availableFooterBarWidth, stackButtonMiddleSpacing, Optional.empty());
+      setSecondaryButtonLayoutParams(
+          secondaryButton, availableFooterBarWidth, stackButtonMiddleSpacing, Optional.empty());
+      setTertiaryButtonLayoutParams(
+          tertiaryButton, availableFooterBarWidth, stackButtonMiddleSpacing);
     }
+  }
+
+  /**
+   * Sets the layout parameters for the primary button.
+   *
+   * <p>Primary button is only used in both stacked and non-stacked button mode.
+   *
+   * @param primaryButton The primary button.
+   * @param availableFooterBarWidth The available width for the footer bar.
+   * @param middleSpacing The middle spacing between the button and the footer bar. It should be
+   *     non-zero for expressive style, and zero for pre expressive style.
+   * @param marginStart The margin start for the button, it's used for pre expressive style, set
+   *     empty from expressive style.
+   */
+  private void setPrimaryButtonLayoutParams(
+      Button primaryButton,
+      int availableFooterBarWidth,
+      int middleSpacing,
+      Optional<Integer> marginStart) {
+    LayoutParams primaryLayoutParams = (LayoutParams) primaryButton.getLayoutParams();
+    primaryLayoutParams.width = availableFooterBarWidth;
+    primaryLayoutParams.bottomMargin = middleSpacing;
+    marginStart.ifPresent(primaryLayoutParams::setMarginStart);
+    primaryButton.setLayoutParams(primaryLayoutParams);
+  }
+
+  /**
+   * Sets the layout parameters for the secondary button.
+   *
+   * <p>Secondary button is only used in both stacked and non-stacked button mode.
+   *
+   * @param secondaryButton The secondary button.
+   * @param availableFooterBarWidth The available width for the footer bar.
+   * @param middleSpacing The middle spacing between the button and the footer bar. It should be
+   *     non-zero for expressive style, and zero for pre expressive style.
+   * @param marginEnd The margin end for the button, it's used for pre expressive style, set empty
+   *     from expressive style.
+   */
+  private void setSecondaryButtonLayoutParams(
+      Button secondaryButton,
+      int availableFooterBarWidth,
+      int middleSpacing,
+      Optional<Integer> marginEnd) {
+    LayoutParams secondaryLayoutParams = (LayoutParams) secondaryButton.getLayoutParams();
+    secondaryLayoutParams.width = availableFooterBarWidth;
+    secondaryLayoutParams.topMargin = middleSpacing;
+    marginEnd.ifPresent(secondaryLayoutParams::setMarginEnd);
+    secondaryButton.setLayoutParams(secondaryLayoutParams);
+  }
+
+  /**
+   * Sets the layout parameters for the tertiary button.
+   *
+   * <p>Tertiary button is only used in stacked button mode.
+   *
+   * @param tertiaryButton The tertiary button.
+   * @param availableFooterBarWidth The available width for the footer bar.
+   * @param middleSpacing The middle spacing between the button and the footer bar. It starts using
+   *     from expressive style, set 0 in pre expressive style.
+   */
+  private void setTertiaryButtonLayoutParams(
+      Button tertiaryButton, int availableFooterBarWidth, int middleSpacing) {
+    LayoutParams tertiaryLayoutParams = (LayoutParams) tertiaryButton.getLayoutParams();
+    tertiaryLayoutParams.width = availableFooterBarWidth;
+    tertiaryLayoutParams.topMargin = middleSpacing;
+    tertiaryLayoutParams.bottomMargin = middleSpacing;
+    tertiaryButton.setLayoutParams(tertiaryLayoutParams);
   }
 
   private boolean isTwoPaneLayout() {
